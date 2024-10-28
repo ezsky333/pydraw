@@ -16,3 +16,7 @@ jobs:
         run: |
           curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
           --header "Token: ${{ secrets.FORUM_TOKEN }}"
+      - name: Send POST request lin
+        run: |
+          curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
+          --header "Token: ${{ secrets.FORUM_TOKEN_LIN }}"
