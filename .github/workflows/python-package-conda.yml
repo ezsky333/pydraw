@@ -1,0 +1,18 @@
+name: Daily Request
+
+on:
+  push:               # 在推送代码时触发
+    branches:
+      - main         # 替换为你的目标分支，通常是 main 或 master
+  schedule:
+    - cron: '30 0 * * *' # 每天00:00 (UTC) 执行
+
+jobs:
+  send_request:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send POST request
+        run: |
+          curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
+          --header "Token: ${{ secrets.FORUM_TOKEN }}"
