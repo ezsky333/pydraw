@@ -5,7 +5,7 @@ on:
     branches:
       - main         # 替换为你的目标分支，通常是 main 或 master
   schedule:
-    - cron: '30 0 * * *' # 每天00:00 (UTC) 执行
+    - cron: '50 0 * * *' # 每天00:00 (UTC) 执行
 
 jobs:
   send_request:
