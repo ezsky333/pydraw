@@ -13,14 +13,64 @@ jobs:
 
     steps:
       - name: Send POST request
+        id: request_1
         run: |
-          curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
-          --header "Token: ${{ secrets.FORUM_TOKEN }}"
+          response=$(curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
+          --header "Token: ${{ secrets.FORUM_TOKEN }}")
+          echo $response > response.json
+          echo "::set-output name=response::$response"
+      - name: Evaluate response and send message for request 1
+        run: |
+          response=${{ steps.request_1.outputs.response }}
+          code=$(echo $response | jq -r '.code')
+          message=$(echo $response | jq -r '.message')
+          if [[ $code == "ok" ]]; then
+            final_message=$message
+          else
+            final_message="签到失败：$message"
+          fi
+          curl --location --request POST 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_WORK_WEBHOOK_KEY }}' \
+          --header 'Content-Type: application/json' \
+          --data-raw "{\"msgtype\": \"text\", \"text\": {\"content\": \"一斩： $final_message\"}}"
+
       - name: Send POST request lin
+        id: request_lin
         run: |
-          curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
-          --header "Token: ${{ secrets.FORUM_TOKEN_LIN }}"
+          response=$(curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
+          --header "Token: ${{ secrets.FORUM_TOKEN_LIN }}")
+          echo $response > response_lin.json
+          echo "::set-output name=response::$response"
+      - name: Evaluate response and send message for request lin
+        run: |
+          response=${{ steps.request_lin.outputs.response }}
+          code=$(echo $response | jq -r '.code')
+          message=$(echo $response | jq -r '.message')
+          if [[ $code == "ok" ]]; then
+            final_message=$message
+          else
+            final_message="签到失败：$message"
+          fi
+          curl --location --request POST 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_WORK_WEBHOOK_KEY }}' \
+          --header 'Content-Type: application/json' \
+          --data-raw "{\"msgtype\": \"text\", \"text\": {\"content\": \"林老师： $final_message\"}}"
+
       - name: Send POST request wang
+        id: request_wang
         run: |
-          curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
-          --header "Token: ${{ secrets.FORUM_TOKEN_WANG }}"
+          response=$(curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
+          --header "Token: ${{ secrets.FORUM_TOKEN_WANG }}")
+          echo $response > response_wang.json
+          echo "::set-output name=response::$response"
+      - name: Evaluate response and send message for request wang
+        run: |
+          response=${{ steps.request_wang.outputs.response }}
+          code=$(echo $response | jq -r '.code')
+          message=$(echo $response | jq -r '.message')
+          if [[ $code == "ok" ]]; then
+            final_message=$message
+          else
+            final_message="签到失败：$message"
+          fi
+          curl --location --request POST 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_WORK_WEBHOOK_KEY }}' \
+          --header 'Content-Type: application/json' \
+          --data-raw "{\"msgtype\": \"text\", \"text\": {\"content\": \"王老师： $final_message\"}}"
