@@ -24,7 +24,7 @@ jobs:
           code=$(echo $response | jq -r '.code')
           message=$(echo $response | jq -r '.message')
           if [[ $code == "ok" ]]; then
-            final_message=$message
+            final_message="签到成功"
           else
             final_message="签到失败：$message"
           fi
@@ -44,7 +44,7 @@ jobs:
           code=$(echo $response | jq -r '.code')
           message=$(echo $response | jq -r '.message')
           if [[ $code == "ok" ]]; then
-            final_message=$message
+            final_message="签到成功"
           else
             final_message="签到失败：$message"
           fi
@@ -64,7 +64,7 @@ jobs:
           code=$(echo $response | jq -r '.code')
           message=$(echo $response | jq -r '.message')
           if [[ $code == "ok" ]]; then
-            final_message=$message
+            final_message="签到成功"
           else
             final_message="签到失败：$message"
           fi
