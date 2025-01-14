@@ -50,8 +50,8 @@ jobs:
           response_wang='${{ steps.request_wang.outputs.response }}'
 
           message_1=$(format_response "$response_1" "一斩")
-          message_lin=$(format_response "$response_lin" "林老师")
-          message_wang=$(format_response "$response_wang" "王老师")
+          message_lin=$(format_response "$response_lin" ${{ secrets.FORUM_NAME_LIN }})
+          message_wang=$(format_response "$response_wang" ${{ secrets.FORUM_NAME_WANG }})
 
           final_message="$message_1\n$message_lin\n$message_wang"
 
