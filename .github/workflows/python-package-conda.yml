@@ -17,11 +17,10 @@ jobs:
         run: |
           response=$(curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
           --header "Token: ${{ secrets.FORUM_TOKEN }}")
-          echo $response > response.json
           echo "::set-output name=response::$response"
       - name: Evaluate response and send message for request 1
         run: |
-          response=${{ steps.request_1.outputs.response }}
+          response='${{ steps.request_1.outputs.response }}'
           code=$(echo $response | jq -r '.code')
           message=$(echo $response | jq -r '.message')
           if [[ $code == "ok" ]]; then
@@ -38,11 +37,10 @@ jobs:
         run: |
           response=$(curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
           --header "Token: ${{ secrets.FORUM_TOKEN_LIN }}")
-          echo $response > response_lin.json
           echo "::set-output name=response::$response"
       - name: Evaluate response and send message for request lin
         run: |
-          response=${{ steps.request_lin.outputs.response }}
+          response='${{ steps.request_lin.outputs.response }}'
           code=$(echo $response | jq -r '.code')
           message=$(echo $response | jq -r '.message')
           if [[ $code == "ok" ]]; then
@@ -59,11 +57,10 @@ jobs:
         run: |
           response=$(curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
           --header "Token: ${{ secrets.FORUM_TOKEN_WANG }}")
-          echo $response > response_wang.json
           echo "::set-output name=response::$response"
       - name: Evaluate response and send message for request wang
         run: |
-          response=${{ steps.request_wang.outputs.response }}
+          response='${{ steps.request_wang.outputs.response }}'
           code=$(echo $response | jq -r '.code')
           message=$(echo $response | jq -r '.message')
           if [[ $code == "ok" ]]; then
