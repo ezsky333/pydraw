@@ -12,62 +12,49 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Send POST request
+      - name: Send POST request for 一斩
         id: request_1
         run: |
           response=$(curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
           --header "Token: ${{ secrets.FORUM_TOKEN }}")
           echo "::set-output name=response::$response"
-      - name: Evaluate response and send message for request 1
-        run: |
-          response='${{ steps.request_1.outputs.response }}'
-          code=$(echo $response | jq -r '.code')
-          message=$(echo $response | jq -r '.message')
-          if [[ $code == "ok" ]]; then
-            final_message="签到成功"
-          else
-            final_message="签到失败：$message"
-          fi
-          curl --location --request POST 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_WORK_WEBHOOK_KEY }}' \
-          --header 'Content-Type: application/json' \
-          --data-raw "{\"msgtype\": \"text\", \"text\": {\"content\": \"一斩： $final_message\"}}"
-
-      - name: Send POST request lin
+      - name: Send POST request for 林老师
         id: request_lin
         run: |
           response=$(curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
           --header "Token: ${{ secrets.FORUM_TOKEN_LIN }}")
           echo "::set-output name=response::$response"
-      - name: Evaluate response and send message for request lin
-        run: |
-          response='${{ steps.request_lin.outputs.response }}'
-          code=$(echo $response | jq -r '.code')
-          message=$(echo $response | jq -r '.message')
-          if [[ $code == "ok" ]]; then
-            final_message="签到成功"
-          else
-            final_message="签到失败：$message"
-          fi
-          curl --location --request POST 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_WORK_WEBHOOK_KEY }}' \
-          --header 'Content-Type: application/json' \
-          --data-raw "{\"msgtype\": \"text\", \"text\": {\"content\": \"林老师： $final_message\"}}"
-
-      - name: Send POST request wang
+      - name: Send POST request for 王老师
         id: request_wang
         run: |
           response=$(curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
           --header "Token: ${{ secrets.FORUM_TOKEN_WANG }}")
           echo "::set-output name=response::$response"
-      - name: Evaluate response and send message for request wang
+
+      - name: Evaluate responses and send consolidated message
         run: |
-          response='${{ steps.request_wang.outputs.response }}'
-          code=$(echo $response | jq -r '.code')
-          message=$(echo $response | jq -r '.message')
-          if [[ $code == "ok" ]]; then
-            final_message="签到成功"
-          else
-            final_message="签到失败：$message"
-          fi
+          format_response() {
+            local response=$1
+            local name=$2
+            local code=$(echo $response | jq -r '.code')
+            local message=$(echo $response | jq -r '.message')
+            if [[ $code == "ok" ]]; then
+              echo "**$name：** 签到成功！🎉"
+            else
+              echo "**$name：** 签到失败：$message ❌"
+            fi
+          }
+
+          response_1='${{ steps.request_1.outputs.response }}'
+          response_lin='${{ steps.request_lin.outputs.response }}'
+          response_wang='${{ steps.request_wang.outputs.response }}'
+
+          message_1=$(format_response "$response_1" "一斩")
+          message_lin=$(format_response "$response_lin" "林老师")
+          message_wang=$(format_response "$response_wang" "王老师")
+
+          final_message="$message_1\n$message_lin\n$message_wang"
+
           curl --location --request POST 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_WORK_WEBHOOK_KEY }}' \
           --header 'Content-Type: application/json' \
-          --data-raw "{\"msgtype\": \"text\", \"text\": {\"content\": \"王老师： $final_message\"}}"
+          --data-raw "{\"msgtype\": \"markdown\", \"markdown\": {\"content\": \"$final_message\"}}"
