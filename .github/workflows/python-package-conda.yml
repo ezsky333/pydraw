@@ -23,6 +23,10 @@ jobs:
 
       - name: Parse token expiry and calculate remaining time
         id: parse_token_expiry
+        env:
+          FORUM_TOKEN: ${{ secrets.FORUM_TOKEN }}
+          FORUM_TOKEN_LIN: ${{ secrets.FORUM_TOKEN_LIN }}
+          FORUM_TOKEN_WANG: ${{ secrets.FORUM_TOKEN_WANG }}
         run: |
           python -c "import jwt
           import os
