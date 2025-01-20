@@ -12,6 +12,59 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyjwt
+
+      - name: Parse token expiry and calculate remaining time
+        id: parse_token_expiry
+        run: |
+          import jwt
+          import os
+          import time
+          from datetime import datetime, timezone
+
+          def get_remaining_time(expiry):
+              now = datetime.now(timezone.utc)
+              if expiry:
+                  exp_time = datetime.fromtimestamp(expiry, tz=timezone.utc)
+                  remaining_time = exp_time - now
+                  
+                  days = remaining_time.days
+                  seconds = remaining_time.seconds
+                  hours = seconds // 3600
+                  minutes = (seconds % 3600) // 60
+
+                  if days > 0:
+                      return f"{days}天"
+                  elif hours > 0:
+                      return f"{hours}小时"
+                  else:
+                      return "不到一小时"
+              else:
+                  return "未找到过期时间"
+
+          def get_token_expiry(token):
+              try:
+                  decoded = jwt.decode(token, options={"verify_signature": False})
+                  exp = decoded.get('exp')
+                  return get_remaining_time(exp)
+              except Exception as e:
+                  return str(e)
+
+          forum_token_expiry = get_token_expiry(os.getenv('FORUM_TOKEN'))
+          forum_token_lin_expiry = get_token_expiry(os.getenv('FORUM_TOKEN_LIN'))
+          forum_token_wang_expiry = get_token_expiry(os.getenv('FORUM_TOKEN_WANG'))
+
+          print(f"::set-output name=forum_token_expiry::{forum_token_expiry}")
+          print(f"::set-output name=forum_token_lin_expiry::{forum_token_lin_expiry}")
+          print(f"::set-output name=forum_token_wang_expiry::{forum_token_wang_expiry}")
+
       - name: Send POST request for 一斩
         id: request_1
         run: |
@@ -36,12 +89,13 @@ jobs:
           format_response() {
             local response=$1
             local name=$2
+            local token_expiry=$3
             local code=$(echo $response | jq -r '.code')
             local message=$(echo $response | jq -r '.message')
             if [[ $code == "ok" ]]; then
-              echo "**$name：** 签到成功！🎉"
+              echo "**$name：** 签到成功！🎉 (Token 过期时间：$token_expiry)"
             else
-              echo "**$name：** 签到失败：$message ❌"
+              echo "**$name：** 签到失败：$message ❌ (Token 过期时间：$token_expiry)"
             fi
           }
 
@@ -49,9 +103,13 @@ jobs:
           response_lin='${{ steps.request_lin.outputs.response }}'
           response_wang='${{ steps.request_wang.outputs.response }}'
 
-          message_1=$(format_response "$response_1" "一斩")
-          message_lin=$(format_response "$response_lin" ${{ secrets.FORUM_NAME_LIN }})
-          message_wang=$(format_response "$response_wang" ${{ secrets.FORUM_NAME_WANG }})
+          token_expiry_1='${{ steps.parse_token_expiry.outputs.forum_token_expiry }}'
+          token_expiry_lin='${{ steps.parse_token_expiry.outputs.forum_token_lin_expiry }}'
+          token_expiry_wang='${{ steps.parse_token_expiry.outputs.forum_token_wang_expiry }}'
+
+          message_1=$(format_response "$response_1" "一斩" "$token_expiry_1")
+          message_lin=$(format_response "$response_lin" ${{ secrets.FORUM_NAME_LIN }} "$token_expiry_lin")
+          message_wang=$(format_response "$response_wang" ${{ secrets.FORUM_NAME_WANG }} "$token_expiry_wang")
 
           final_message="$message_1\n$message_lin\n$message_wang"
 
