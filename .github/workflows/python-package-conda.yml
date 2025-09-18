@@ -27,6 +27,7 @@ jobs:
           FORUM_TOKEN: ${{ secrets.FORUM_TOKEN }}
           FORUM_TOKEN_LIN: ${{ secrets.FORUM_TOKEN_LIN }}
           FORUM_TOKEN_WANG: ${{ secrets.FORUM_TOKEN_WANG }}
+          FORUM_TOKEN_WANG2: ${{ secrets.FORUM_TOKEN_WANG2 }}
         run: |
           python -c "import jwt
           import os
@@ -64,7 +65,7 @@ jobs:
           forum_token_expiry = get_token_expiry(os.getenv('FORUM_TOKEN'))
           forum_token_lin_expiry = get_token_expiry(os.getenv('FORUM_TOKEN_LIN'))
           forum_token_wang_expiry = get_token_expiry(os.getenv('FORUM_TOKEN_WANG'))
-          
+          forum_token_wang_expiry2 = get_token_expiry(os.getenv('FORUM_TOKEN_WANG2'))
           print(f'::set-output name=forum_token_expiry::{forum_token_expiry}')
           print(f'::set-output name=forum_token_lin_expiry::{forum_token_lin_expiry}')
           print(f'::set-output name=forum_token_wang_expiry::{forum_token_wang_expiry}')
@@ -88,7 +89,12 @@ jobs:
           response=$(curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
           --header "Token: ${{ secrets.FORUM_TOKEN_WANG }}")
           echo "::set-output name=response::$response"
-
+      - name: Send POST request for 王老师
+        id: request_wang2
+        run: |
+          response=$(curl --location --request POST 'https://edu.definesys.cn/edu-api/forumSign/sign' \
+          --header "Token: ${{ secrets.FORUM_TOKEN_WANG2 }}")
+          echo "::set-output name=response::$response"
       - name: Evaluate responses and send consolidated message
         run: |
           format_response() {
@@ -107,16 +113,19 @@ jobs:
           response_1='${{ steps.request_1.outputs.response }}'
           response_lin='${{ steps.request_lin.outputs.response }}'
           response_wang='${{ steps.request_wang.outputs.response }}'
+          response_wang2='${{ steps.request_wang2.outputs.response }}'
 
           token_expiry_1='${{ steps.parse_token_expiry.outputs.forum_token_expiry }}'
           token_expiry_lin='${{ steps.parse_token_expiry.outputs.forum_token_lin_expiry }}'
           token_expiry_wang='${{ steps.parse_token_expiry.outputs.forum_token_wang_expiry }}'
+          token_expiry_wang2='${{ steps.parse_token_expiry.outputs.forum_token_wang_expiry }}'
 
           message_1=$(format_response "$response_1" "一斩" "$token_expiry_1")
           message_lin=$(format_response "$response_lin" ${{ secrets.FORUM_NAME_LIN }} "$token_expiry_lin")
           message_wang=$(format_response "$response_wang" ${{ secrets.FORUM_NAME_WANG }} "$token_expiry_wang")
+          message_wang2=$(format_response "$response_wang" ${{ secrets.FORUM_NAME_WANG2 }} "$token_expiry_wang2")
 
-          final_message="$message_1\n$message_lin\n$message_wang"
+          final_message="$message_1\n$message_lin\n$message_wang\n$message_wang2"
 
           curl --location --request POST 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_WORK_WEBHOOK_KEY }}' \
           --header 'Content-Type: application/json' \
